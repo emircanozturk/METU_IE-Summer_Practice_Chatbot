@@ -43,7 +43,7 @@ st.markdown("""
         padding: 6px 15px;
         font-size: 12px;
         border-radius: 6px 6px 0 0;
-        text-align: center; /* Centered text */
+        text-align: center;
         font-family: Arial, sans-serif;
     }
     
@@ -100,6 +100,19 @@ st.markdown("""
         background-color: #e9ecef;
         transform: translateX(3px);
     }
+    
+    /* Starter Question Buttons styling */
+    .starter-btn>button {
+        background-color: #f8f9fa;
+        text-align: center;
+        border-radius: 20px;
+        color: #cb2c30;
+        border: 1px solid #cb2c30;
+    }
+    .starter-btn>button:hover {
+        background-color: #cb2c30;
+        color: white;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -135,7 +148,11 @@ lang_dict = {
         "q8_prmpt": "What sort of reporting is acceptable if several students practice in the same organization?",
         "placeholder": "E.g., What are the requirements for IE 300?",
         "thinking": "Consulting official guidelines...",
-        "system_instruction_lang": "You must respond entirely in English."
+        "welcome_msg": "👋 Welcome! I am ready to help. Try asking one of these:",
+        "rec_1": "IE 300 Prerequisites?",
+        "rec_1_prmpt": "What are the exact prerequisites for IE 300?",
+        "rec_2": "Suitable companies for IE 400?",
+        "rec_2_prmpt": "Are there any company constraints for IE 400?"
     },
     "TR": {
         "topbar": "EM | ODTÜ",
@@ -167,7 +184,11 @@ lang_dict = {
         "q8_prmpt": "Aynı organizasyonda birkaç öğrenci staj yaparsa ne tür bir raporlama kabul edilir?",
         "placeholder": "Örn., IE 300 için gereksinimler nelerdir?",
         "thinking": "Resmi yönergeler inceleniyor...",
-        "system_instruction_lang": "You must respond entirely in Turkish. (Kullanıcıya tamamen Türkçe cevap vermelisin.)"
+        "welcome_msg": "👋 Hoş geldiniz! Yardım etmeye hazırım. Şunları sorabilirsiniz:",
+        "rec_1": "IE 300 Ön Koşulları?",
+        "rec_1_prmpt": "IE 300 stajı için ön koşullar nelerdir?",
+        "rec_2": "IE 400 için uygun şirketler?",
+        "rec_2_prmpt": "IE 400 için şirket veya sektör kısıtlaması var mı?"
     }
 }
 
@@ -254,19 +275,14 @@ with their Summer Practices (IE 300 and IE 400).
 Below is the official documentation. You MUST use ONLY this information to answer user queries. 
 DO NOT use outside knowledge. DO NOT invent constraints, deadlines, or rules that are not explicitly written below.
 
-CRITICAL GUARDRAILS (NEVER VIOLATE THESE):
-1. IE 400 CAN absolutely be conducted in service industries (e.g., banks, hospitals, hotels, research organizations) as long as the student can observe and analyze a purposeful system. Do not tell students that service industries are banned.
-2. If the user asks about a constraint that is NOT explicitly mentioned in the <official_documentation>, you must answer: "The official guidelines do not specify a constraint for this. Please consult the IE SP Committee."
+CRITICAL GUARDRAILS:
+1. IE 400 CAN absolutely be conducted in service industries (e.g., banks, hospitals, hotels, research organizations). Do not tell students that service industries are banned. 
+2. When asked about company constraints or suitability for IE 400, explain that the organization must have a "purposeful system" with integrated operations of people, financial resources, processes, and information, along with decision-making capabilities.
+3. ALWAYS respond in the SAME LANGUAGE as the user's prompt (e.g., reply in Turkish if the prompt is in Turkish, reply in English if the prompt is in English).
 
 <official_documentation>
 {kb_text}
 </official_documentation>
-
-CRITICAL INSTRUCTION: If a user asks a question that falls outside the scope 
-of METU-IE Summer Practice (e.g., general programming, other universities, or unrelated topics), 
-you must politely decline to answer and redirect them to ask about IE 300 or IE 400 summer practices.
-
-{t['system_instruction_lang']}
 """
 
 # --- RENDER MAIN UI ---
@@ -321,9 +337,27 @@ with st.sidebar:
     """)
 
 # --- CHAT RENDERING & LOGIC ---
+
+# 1. Render existing messages
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
+# 2. Render welcome recommendations ONLY if chat is empty
+if len(st.session_state.messages) == 0:
+    st.info(t["welcome_msg"])
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('<div class="starter-btn">', unsafe_allow_html=True)
+        if st.button(t["rec_1"], use_container_width=True):
+            st.session_state.quick_prompt = t["rec_1_prmpt"]
+        st.markdown('</div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="starter-btn">', unsafe_allow_html=True)
+        if st.button(t["rec_2"], use_container_width=True):
+            st.session_state.quick_prompt = t["rec_2_prmpt"]
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# 3. Handle input
 prompt = st.chat_input(t["placeholder"])
 
 if st.session_state.quick_prompt:
@@ -349,6 +383,9 @@ if prompt:
             
             st.session_state.messages.append({"role": "assistant", "content": bot_reply})
             st.chat_message("assistant").write(bot_reply)
+            
+            # Since we appended a new message, rerun to hide the starter recommendations
+            st.rerun()
             
         except Exception as e:
             st.error(f"An error occurred: {e}")
