@@ -21,7 +21,7 @@ This application is built using **Streamlit** and the **OpenAI API** (gpt-4o-min
 ## 📂 Project Structure
 
 ```text
-ie304-chatbot-project/
+sp-chatbot-project/
 │
 ├── app.py                 # Main Streamlit application script
 ├── requirements.txt       # Python dependencies for deployment
