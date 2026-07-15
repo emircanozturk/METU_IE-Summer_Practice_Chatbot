@@ -1,5 +1,6 @@
 # 🔴 METU-IE Summer Practice Intelligent Assistant
 
+https://metu-ie-summerpractice-chatbot.streamlit.app/
 An interactive, AI-powered virtual consultant designed to help Middle East Technical University (METU) Industrial Engineering students navigate the official requirements, deadlines, and paperwork for their IE 300 and IE 400 Summer Practices.
 
 This application is built using **Streamlit** and the **OpenAI API** (gpt-4o-mini), utilizing a local Retrieval-Augmented Generation (RAG) approach to parse official department documents and provide strictly accurate, hallucination-free answers.
